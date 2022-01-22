@@ -1,6 +1,6 @@
 plugins {
     java
-    id("remdev.versioning")
+    id("org.remdev.versioning")
     id("com.ncorti.kotlin.gradle.template.plugin")
 }
 

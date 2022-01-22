@@ -10,7 +10,7 @@ class VersioningPluginTest {
     @Test
     fun `plugin is applied correctly to the project`() {
         val project = ProjectBuilder.builder().build()
-        project.pluginManager.apply("remdev.versioning")
+        project.pluginManager.apply("org.remdev.versioning")
 
         assert(project.tasks.getByName("incrementVersions") is IncrementVersionTask)
     }
@@ -18,7 +18,7 @@ class VersioningPluginTest {
     @Test
     fun `extension templateExampleConfig is created correctly`() {
         val project = ProjectBuilder.builder().build()
-        project.pluginManager.apply("remdev.versioning")
+        project.pluginManager.apply("org.remdev.versioning")
 
         assertNotNull(project.extensions.getByName("versioning"))
     }

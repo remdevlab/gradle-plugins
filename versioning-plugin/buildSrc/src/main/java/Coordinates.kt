@@ -1,5 +1,5 @@
 object VersioningPluginCoordinates {
-    const val ID = "remdev.versioning"
+    const val ID = "org.remdev.versioning"
     const val GROUP = "org.remdev.gradle.plugin"
     const val VERSION = "1.0.0"
     const val IMPLEMENTATION_CLASS = "org.remdev.gradle.plugin.VersioningPlugin"
