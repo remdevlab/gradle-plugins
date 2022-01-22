@@ -7,7 +7,7 @@ import org.remdev.gradle.plugin.domain.AppModel
 import javax.inject.Inject
 
 @Suppress("UnnecessaryAbstractClass")
-abstract class VersioningExtension @Inject constructor(project: Project) {
+abstract class VersioningExtension @Inject constructor(val project: Project) {
     val artifacts: MutableList<AppModel> = mutableListOf()
 
     fun getVersionNameFor(alias: String): String {

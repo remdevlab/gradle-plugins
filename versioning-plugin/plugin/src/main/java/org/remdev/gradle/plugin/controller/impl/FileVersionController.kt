@@ -20,16 +20,12 @@ class FileVersionController : VersionsController {
     private val externalStorage = File(System.getProperty("user.home"), ".gradle/${Deps.EXTERNAL_STORAGE_PROPERTY_FILE_NAME}")
 
     override fun initDefaultVersions(variants: List<VersionFor>, artifacts: MutableList<AppModel>) {
-        try {
-            initExternalStorage()
-            Deps.logger.warn(Deps.TAG + "Variants to artifacts")
-            for (it in variants) {
-                artifacts.add(initArtifact(it))
-            }
-            Deps.logger.warn(Deps.TAG + "Done")
-        } catch (th: Throwable) {
-            Deps.logger.warn(Deps.TAG + th.toString(), th)
+        initExternalStorage()
+        Deps.logger.warn(Deps.TAG + "Variants to artifacts")
+        for (it in variants) {
+            artifacts.add(initArtifact(it))
         }
+        Deps.logger.warn(Deps.TAG + "Done")
     }
 
     private fun initExternalStorage() {
@@ -68,7 +64,7 @@ class FileVersionController : VersionsController {
             versionName += "_${SimpleDateFormat("MMddyy_HHmm").format(Date())}"
         }
         if (result.includeBranchName) {
-            versionName += "_${getGitBranch()}"
+            versionName += "_${"git rev-parse --abbrev-ref HEAD".runCommand(project.rootDir)}"
         }
         if (result.includeUserName) {
             versionName += "_${System.getProperty("user.name")}"
@@ -80,18 +76,8 @@ class FileVersionController : VersionsController {
         return versionName
     }
 
-    private fun getGitBranch(): String {
-        var branch = "nogit"
-        try {
-            branch = "git rev-parse --abbrev-ref HEAD".runCommand(project.rootDir)
-        } catch (th: Throwable) {
-            Deps.logger.warn(Deps.TAG + th.toString(), th)
-        }
-        return branch
-    }
-
     private fun buildVersionCode(result: AppModel): Int {
-        val code = result.major * 10_000_000 + result.minor * 100_000 + result.patch * 1000 + result.buildNumber
+        val code = result.major * MAJOR_FACTOR + result.minor * MINOR_FACTOR + result.patch * PATCH_FACTOR + result.buildNumber
         Deps.logger.warn(Deps.TAG + "Version code of ${result.toUniqueId()} is: $code")
         return code
     }
@@ -113,35 +99,29 @@ class FileVersionController : VersionsController {
     private fun populateNewVersionFileWithEmptyValues(versionFile: File) {
         val props = Properties()
         FileInputStream(versionFile).use { props.load(it) }
-        updateTimestamp(props)
 
         props.setProperty(MAJOR, ZERO.toString())
         props.setProperty(MINOR, ZERO.toString())
         props.setProperty(PATCH, ONE.toString())
 
-        flushToFile(props)
-    }
-
-    private fun updateTimestamp(props: Properties) {
-        props["updated"] = Date().toInstant().toString()
+        flushToFile(versionFile, props)
     }
 
     override fun incrementVersionFor(model: AppModel) {
         val props = Properties()
         FileInputStream(externalStorage).use { props.load(it) }
-        updateTimestamp(props)
         model.buildNumber += 1
         props.setProperty(model.toUniqueId(), model.buildNumber.toString())
-        flushToFile(props)
+        flushToFile(externalStorage, props)
     }
 
-    private fun flushToFile(props: Properties) {
-        FileWriter(externalStorage).use { writer ->
+    private fun flushToFile(file: File, props: Properties) {
+        FileWriter(file).use { writer ->
             try {
-                props.store(writer, "This file contains build numbers for android applications")
+                props.store(writer, "This file contains Application version [MAJOR.MINOR.PATCH]")
                 writer.flush()
                 Deps.logger.warn(Deps.TAG + "Property file flushed")
-            } catch (th: Throwable) {
+            } catch (th: IOException) {
                 Deps.logger.warn(Deps.TAG + th.toString())
             }
             Deps.logger.warn(Deps.TAG + "Property file flushed")
@@ -152,8 +132,12 @@ class FileVersionController : VersionsController {
         const val ZERO = 0
         const val ONE = 1
         const val MAJOR = "MAJOR"
+        const val MAJOR_FACTOR = 10_000_000
         const val MINOR = "MINOR"
+        const val MINOR_FACTOR = 100_000
         const val PATCH = "PATCH"
+        const val PATCH_FACTOR = 1000
+        private const val AWAITING_TIMEOUT = 10L
 
         fun String.runCommand(workingDir: File): String {
             try {
@@ -164,7 +148,7 @@ class FileVersionController : VersionsController {
                     .redirectError(ProcessBuilder.Redirect.PIPE)
                     .start()
 
-                proc.waitFor(10, TimeUnit.SECONDS)
+                proc.waitFor(AWAITING_TIMEOUT, TimeUnit.SECONDS)
                 return proc.inputStream.bufferedReader().readText()
             } catch (e: IOException) {
                 Deps.logger.warn(Deps.TAG + e.toString(), e)
