@@ -6,15 +6,13 @@ object VersioningPluginCoordinates {
 }
 
 object VersioningPluginBundle {
-    const val VCS = "https://github.com/cortinico/kotlin-gradle-plugin-template"
-    const val WEBSITE = "https://github.com/cortinico/kotlin-gradle-plugin-template"
-    const val DESCRIPTION = "An empty Gradle plugin created from a template"
-    const val DISPLAY_NAME = "An empty Gradle Plugin from a template"
+    const val VCS = "https://github.com/remdevlab/gradle-plugins"
+    const val WEBSITE = "https://github.com/remdevlab/gradle-plugins"
+    const val DESCRIPTION = "Plugin provides ability to manage versions of android applications and calculates incremental build number for each version"
+    const val DISPLAY_NAME = "Android versioning"
     val TAGS = listOf(
-        "plugin",
-        "gradle",
-        "sample",
-        "template"
+        "versioning",
+        "android",
     )
 }
 
